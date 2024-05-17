@@ -167,62 +167,69 @@ var cssTemplates = map[string]string{
 `,
 }
 
-// CSSファイルを生成
 func generateCSS(htmlDir string) {
 	cssDir := filepath.Join(htmlDir, "styles")
 
 	// HTMLフォルダ内のHTMLファイルを取得
 	files, err := os.ReadDir(htmlDir)
 	if err != nil {
-			fmt.Println("HTMLフォルダの読み込みエラー:", err)
-			return
+		fmt.Println("HTMLフォルダの読み込みエラー:", err)
+		return
 	}
 
 	// 使用されているクラス名を抽出
-	classSet := make(map[string]bool)
 	classRegex := regexp.MustCompile(`class="([^"]+)"`)
 
 	for _, file := range files {
-			if !file.IsDir() && filepath.Ext(file.Name()) == ".html" {
-					htmlFilename := filepath.Join(htmlDir, file.Name())
+		if !file.IsDir() && filepath.Ext(file.Name()) == ".html" {
+			htmlFilename := filepath.Join(htmlDir, file.Name())
 
-					// HTMLファイルを読み込み
-					htmlContent, err := os.ReadFile(htmlFilename)
-					if err != nil {
-							fmt.Println("HTMLファイルの読み込みエラー:", err)
-							return
-					}
-
-					// クラス名を抽出してセットに追加
-					matches := classRegex.FindAllStringSubmatch(string(htmlContent), -1)
-					for _, match := range matches {
-							classes := strings.Split(match[1], " ")
-							for _, class := range classes {
-									classSet[class] = true
-							}
-					}
+			// HTMLファイルを読み込み
+			htmlContent, err := os.ReadFile(htmlFilename)
+			if err != nil {
+				fmt.Println("HTMLファイルの読み込みエラー:", err)
+				return
 			}
-	}
 
-	// CSSファイルを書き込む
-	for _, file := range files {
-			if !file.IsDir() && filepath.Ext(file.Name()) == ".html" {
-					cssFilename := filepath.Join(cssDir, strings.TrimSuffix(file.Name(), filepath.Ext(file.Name()))+".css")
-					cssContent := ""
-
-					for class := range classSet {
-							if template, exists := cssTemplates[class]; exists {
-									cssContent += template
-							}
-					}
-
-					err := os.WriteFile(cssFilename, []byte(cssContent), 0644)
-					if err != nil {
-							fmt.Println("CSSファイルの書き込みエラー:", err)
-							return
-					}
-					fmt.Println("CSSファイルが生成されました:", cssFilename)
+			// クラス名を抽出してセットに追加
+			classSet := make(map[string]bool)
+			matches := classRegex.FindAllStringSubmatch(string(htmlContent), -1)
+			for _, match := range matches {
+				classes := strings.Split(match[1], " ")
+				for _, class := range classes {
+					classSet[class] = true
+				}
 			}
+
+			// CSSファイルを書き込む
+			cssFilename := filepath.Join(cssDir, strings.TrimSuffix(file.Name(), filepath.Ext(file.Name()))+".css")
+			cssContent := ""
+
+			for class := range classSet {
+				if template, exists := cssTemplates[class]; exists {
+					cssContent += template
+				}
+			}
+
+			err = os.WriteFile(cssFilename, []byte(cssContent), 0644)
+			if err != nil {
+				fmt.Println("CSSファイルの書き込みエラー:", err)
+				return
+			}
+			fmt.Println("CSSファイルが生成されました:", cssFilename)
+
+			// HTMLファイルにCSSへのリンクを追加
+			linkTag := fmt.Sprintf(`<link rel="stylesheet" type="text/css" href="styles/%s">`, filepath.Base(cssFilename))
+			if !strings.Contains(string(htmlContent), linkTag) {
+				htmlContentWithLink := strings.Replace(string(htmlContent), "</head>", linkTag+"</head>", 1)
+				err = os.WriteFile(htmlFilename, []byte(htmlContentWithLink), 0644)
+				if err != nil {
+					fmt.Println("HTMLファイルの書き込みエラー:", err)
+					return
+				}
+				fmt.Println("HTMLファイルにCSSへのリンクが追加されました:", htmlFilename)
+			}
+		}
 	}
 }
 
