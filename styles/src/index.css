@@ -1,0 +1,16 @@
+
+.text-5xl {
+  font-size: 3rem;
+}
+
+.text-center {
+  text-align: center;
+}
+
+.grid-cols-3 {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.font-bold {
+  font-weight: bold;
+}

@@ -11,3 +11,11 @@
   text-align: center;
   transition: background-color 0.3s;
 }
+
+.text-4xl {
+  font-size: 2.25rem;
+}
+
+.font-bold {
+  font-weight: bold;
+}

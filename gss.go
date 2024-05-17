@@ -168,27 +168,20 @@ var cssTemplates = map[string]string{
 }
 
 func generateCSS(htmlDir string) {
-	cssDir := filepath.Join(htmlDir, "styles")
-
-	// HTMLフォルダ内のHTMLファイルを取得
-	files, err := os.ReadDir(htmlDir)
-	if err != nil {
-		fmt.Println("HTMLフォルダの読み込みエラー:", err)
-		return
-	}
-
 	// 使用されているクラス名を抽出
 	classRegex := regexp.MustCompile(`class="([^"]+)"`)
 
-	for _, file := range files {
-		if !file.IsDir() && filepath.Ext(file.Name()) == ".html" {
-			htmlFilename := filepath.Join(htmlDir, file.Name())
+	// HTMLフォルダ内のHTMLファイルを取得
+	err := filepath.WalkDir(htmlDir, func(path string, d os.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
 
+		if !d.IsDir() && filepath.Ext(d.Name()) == ".html" {
 			// HTMLファイルを読み込み
-			htmlContent, err := os.ReadFile(htmlFilename)
+			htmlContent, err := os.ReadFile(path)
 			if err != nil {
-				fmt.Println("HTMLファイルの読み込みエラー:", err)
-				return
+				return err
 			}
 
 			// クラス名を抽出してセットに追加
@@ -201,8 +194,11 @@ func generateCSS(htmlDir string) {
 				}
 			}
 
-			// CSSファイルを書き込む
-			cssFilename := filepath.Join(cssDir, strings.TrimSuffix(file.Name(), filepath.Ext(file.Name()))+".css")
+			// HTMLファイルにCSSへのリンクを追加
+			relativePath, _ := filepath.Rel(htmlDir, path)
+			cssDir := filepath.Join(htmlDir, "styles", filepath.Dir(relativePath))
+			os.MkdirAll(cssDir, os.ModePerm)
+			cssFilename := filepath.Join(cssDir, strings.TrimSuffix(filepath.Base(path), filepath.Ext(path))+".css")
 			cssContent := ""
 
 			for class := range classSet {
@@ -213,23 +209,29 @@ func generateCSS(htmlDir string) {
 
 			err = os.WriteFile(cssFilename, []byte(cssContent), 0644)
 			if err != nil {
-				fmt.Println("CSSファイルの書き込みエラー:", err)
-				return
+				return err
 			}
 			fmt.Println("CSSファイルが生成されました:", cssFilename)
 
 			// HTMLファイルにCSSへのリンクを追加
-			linkTag := fmt.Sprintf(`<link rel="stylesheet" type="text/css" href="styles/%s">`, filepath.Base(cssFilename))
+			relativeCssPath, _ := filepath.Rel(filepath.Dir(path), cssFilename)
+			linkTag := fmt.Sprintf(`<link rel="stylesheet" type="text/css" href="%s">`, relativeCssPath)
 			if !strings.Contains(string(htmlContent), linkTag) {
 				htmlContentWithLink := strings.Replace(string(htmlContent), "</head>", linkTag+"</head>", 1)
-				err = os.WriteFile(htmlFilename, []byte(htmlContentWithLink), 0644)
+				err = os.WriteFile(path, []byte(htmlContentWithLink), 0644)
 				if err != nil {
-					fmt.Println("HTMLファイルの書き込みエラー:", err)
-					return
+					return err
 				}
-				fmt.Println("HTMLファイルにCSSへのリンクが追加されました:", htmlFilename)
+				fmt.Println("HTMLファイルにCSSへのリンクが追加されました:", path)
 			}
 		}
+
+		return nil
+	})
+
+	if err != nil {
+		fmt.Println("HTMLフォルダの読み込みエラー:", err)
+		return
 	}
 }
 
@@ -237,7 +239,7 @@ func generateCSS(htmlDir string) {
 func main() {
 	// 引数で指定されたフォルダ内のHTMLファイルを監視
 	if len(os.Args) < 2 {
-		fmt.Println("使用法: go run generate_css.go <HTMLフォルダ> [--watch]")
+		fmt.Println("使用法: go run gss.go <HTMLフォルダ> [--watch]")
 		return
 	}
 	htmlDir := os.Args[1]
@@ -283,7 +285,19 @@ func main() {
 			}
 		}()
 
-		err = watcher.Add(htmlDir)
+		// HTMLディレクトリとそのサブディレクトリを監視対象に追加
+		err = filepath.Walk(htmlDir, func(path string, info os.FileInfo, err error) error {
+			if err != nil {
+				return err
+			}
+			if info.IsDir() {
+				err = watcher.Add(path)
+				if err != nil {
+					return err
+				}
+			}
+			return nil
+		})
 		if err != nil {
 			fmt.Println("Watcherの追加エラー:", err)
 			return
