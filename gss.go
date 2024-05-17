@@ -228,65 +228,69 @@ func generateCSS(htmlDir string) {
 
 
 func main() {
-    // 引数で指定されたフォルダ内のHTMLファイルを監視
-    if len(os.Args) < 2 {
-        fmt.Println("使用法: go run generate_css.go <HTMLフォルダ>")
-        return
-    }
-    htmlDir := os.Args[1]
+	// 引数で指定されたフォルダ内のHTMLファイルを監視
+	if len(os.Args) < 2 {
+		fmt.Println("使用法: go run generate_css.go <HTMLフォルダ> [--watch]")
+		return
+	}
+	htmlDir := os.Args[1]
+	watch := len(os.Args) > 2 && os.Args[2] == "--watch"
 
-    // CSSディレクトリが存在しない場合は作成
-    cssDir := filepath.Join(htmlDir, "styles")
-    if _, err := os.Stat(cssDir); os.IsNotExist(err) {
-        os.Mkdir(cssDir, os.ModePerm)
-    }
+	// CSSディレクトリが存在しない場合は作成
+	cssDir := filepath.Join(htmlDir, "styles")
+	if _, err := os.Stat(cssDir); os.IsNotExist(err) {
+		os.Mkdir(cssDir, os.ModePerm)
+	}
 
-    // 初回のCSS生成
-    generateCSS(htmlDir)
+	// 初回のCSS生成
+	generateCSS(htmlDir)
 
-    // HTMLフォルダ内のHTMLファイルの変更を監視
-    watcher, err := fsnotify.NewWatcher()
-    if err != nil {
-        fmt.Println("Watcherの初期化エラー:", err)
-        return
-    }
-    defer watcher.Close()
+	// --watchフラッグが指定された場合のみ監視を開始
+	if watch {
+		// HTMLフォルダ内のHTMLファイルの変更を監視
+		watcher, err := fsnotify.NewWatcher()
+		if err != nil {
+			fmt.Println("Watcherの初期化エラー:", err)
+			return
+		}
+		defer watcher.Close()
 
-    done := make(chan bool)
-    go func() {
-        for {
-            select {
-            case event, ok := <-watcher.Events:
-                if !ok {
-                    return
-                }
-                if event.Op&fsnotify.Write == fsnotify.Write && filepath.Ext(event.Name) == ".html" {
-                    fmt.Println("HTMLファイルが変更されました:", event.Name)
-                    generateCSS(htmlDir)
-                }
-            case err, ok := <-watcher.Errors:
-                if !ok {
-                    return
-                }
-                fmt.Println("Watcherエラー:", err)
-            }
-        }
-    }()
+		done := make(chan bool)
+		go func() {
+			for {
+				select {
+				case event, ok := <-watcher.Events:
+					if !ok {
+						return
+					}
+					if event.Op&fsnotify.Write == fsnotify.Write && filepath.Ext(event.Name) == ".html" {
+						fmt.Println("HTMLファイルが変更されました:", event.Name)
+						generateCSS(htmlDir)
+					}
+				case err, ok := <-watcher.Errors:
+					if !ok {
+						return
+					}
+					fmt.Println("Watcherエラー:", err)
+				}
+			}
+		}()
 
-    err = watcher.Add(htmlDir)
-    if err != nil {
-        fmt.Println("Watcherの追加エラー:", err)
-        return
-    }
-    fmt.Println("監視中:", htmlDir)
+		err = watcher.Add(htmlDir)
+		if err != nil {
+			fmt.Println("Watcherの追加エラー:", err)
+			return
+		}
+		fmt.Println("監視中:", htmlDir)
 
-    // exitコマンドが入力されるまで監視を継続
-    scanner := bufio.NewScanner(os.Stdin)
-    for scanner.Scan() {
-        if scanner.Text() == "exit" {
-            break
-        }
-    }
+		// exitコマンドが入力されるまで監視を継続
+		scanner := bufio.NewScanner(os.Stdin)
+		for scanner.Scan() {
+			if scanner.Text() == "exit" {
+				break
+			}
+		}
 
-    <-done
+		<-done
+	}
 }
