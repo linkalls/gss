@@ -1,12 +1,4 @@
 
-.text-4xl {
-  font-size: 2.25rem;
-}
-
-.text-center {
-  text-align: center;
-}
-
 .grid-cols-3 {
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }
@@ -17,4 +9,12 @@
   margin-right: auto;
   padding-left: 1rem;
   padding-right: 1rem;
+}
+
+.text-4xl {
+  font-size: 2.25rem;
+}
+
+.text-center {
+  text-align: center;
 }

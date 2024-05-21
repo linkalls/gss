@@ -193,6 +193,8 @@ var cssTemplates = map[string]string{
 	// アニメーションとトランジション
 	"btn-animation": `
 .btn-animation {
+/*	background-color: #00bfff; */
+	background-color: #ffa500;
 	display: inline-block;
   padding: 0.5rem 1rem;
   border-radius: 0.375rem;
@@ -205,7 +207,8 @@ var cssTemplates = map[string]string{
 .btn-animation:hover {
 	
 	/* ホバーエフェクト */
-	background-color: #4FD1C5;
+	/* background-color: #4FD1C5; どっちがいいかな */ 
+	background-color: #00bfff;
 	transform: translateY(-2px);
 }
 `,
