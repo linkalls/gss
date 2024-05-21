@@ -31,3 +31,8 @@
 	background-color: #4FD1C5;
 	transform: translateY(-2px);
 }
+
+.btn-center {
+	display: block;
+  margin: auto;
+}

@@ -209,6 +209,12 @@ var cssTemplates = map[string]string{
 	transform: translateY(-2px);
 }
 `,
+ "btn-center": `
+.btn-center {
+	display: block;
+  margin: auto;
+}
+`,
 
 	// フォームのスタイリング
 	"form": `
