@@ -22,6 +22,18 @@ var cssTemplates = map[string]string{
 }
 `,
 
+		"flex": `
+.flex {
+	display: flex;
+}
+`,
+
+ "blue": `
+.blue {
+	background-color: rgb(59 130 246);
+}
+`,
+
     "grid": `
 .grid {
   display: grid;
@@ -115,6 +127,7 @@ var cssTemplates = map[string]string{
   font-weight: 600;
   text-align: center;
   transition: background-color 0.3s;
+	
 }
 `,
 
@@ -164,8 +177,95 @@ var cssTemplates = map[string]string{
     max-width: 1280px;
   }
 }
+	// 既存のCSSテンプレート...
+
+	// レスポンシブデザイン用のメディアクエリ
+	"responsive": 
+@media (max-width: 768px) {
+	/* 768px以下の画面幅に対するスタイル */
+}
+
+@media (min-width: 768px) and (max-width: 1024px) {
+	/* 768px〜1024pxの画面幅に対するスタイル */
+}
+`,
+
+	// アニメーションとトランジション
+	"btn-animation": `
+.btn-animation {
+	display: inline-block;
+  padding: 0.5rem 1rem;
+  border-radius: 0.375rem;
+  font-weight: 600;
+  text-align: center;
+	/* ボタンのアニメーション */
+	transition: background-color 0.3s, transform 0.2s;
+}
+
+.btn-animation:hover {
+	
+	/* ホバーエフェクト */
+	background-color: #4FD1C5;
+	transform: translateY(-2px);
+}
+`,
+
+	// フォームのスタイリング
+	"form": `
+.input-field {
+	/* 入力フィールドのスタイル */
+	border: 1px solid #D1D5DB;
+	border-radius: 0.375rem;
+	padding: 0.5rem 0.75rem;
+	transition: border-color 0.3s;
+}
+
+.input-field:focus {
+	/* フォーカス時のスタイル */
+	border-color: #4FD1C5;
+	outline: none;
+	box-shadow: 0 0 0 3px rgba(79, 209, 197, 0.2);
+}
+
+.error-message {
+	/* エラーメッセージのスタイル */
+	color: #EF4444;
+	font-size: 0.875rem;
+}
+`,
+
+	// グリッドシステム
+	"grid-system": `
+.container {
+	/* コンテナのスタイル */
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+	gap: 1rem;
+}
+
+.column {
+	/* カラムのスタイル */
+	padding: 1rem;
+	background-color: #F3F4F6;
+	border-radius: 0.5rem;
+	box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+`,
+
+	// カラースキーム
+	"colors": `
+.primary-color {
+	/* プライマリカラー */
+	color: #4FD1C5;
+}
+
+.secondary-color {
+	/* セカンダリカラー */
+	color: #6B7280;
+}
 `,
 }
+
 
 func generateCSS(htmlDir string) {
 	// 使用されているクラス名を抽出
